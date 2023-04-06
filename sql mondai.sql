@@ -455,3 +455,72 @@ where
 order by
     id
 
+--問題1：各グループの中でFIFAランクが最も高い国と低い国のランキング番号を表示してください。
+select
+    group_name as グループ , min(ranking) as ランキング最上位, max(ranking) as ランキング最下位 
+from
+    countries 
+group by group_name
+
+--問題2：全ゴールキーパーの平均身長、平均体重を表示してください
+select avg(height) as 平均身長,avg(weight) as 平均体重
+from players
+
+--問題3：各国の平均身長を高い方から順に表示してください。ただし、FROM句はcountriesテーブルとしてください。
+select c.name as 国名,avg(p.height) as 平均身長
+from countries c
+join players p on p.country_id = c.id
+group by c.id,c.name
+order by avg(p.height) desc
+
+--問題4：各国の平均身長を高い方から順に表示してください。ただし、FROM句はplayersテーブルとして、テーブル結合を使わず副問合せを用いてください。
+select (select c.name from countries c where p.country_id = c.id) as 国名, avg(p.height) as 平均身長
+from players p
+group by p.country_id
+order by avg(p.height) desc
+
+--問題5：キックオフ日時と対戦国の国名をキックオフ日時の早いものから順に表示してください。
+select kickoff as キックオフ日時, c1.name as 国名1, c2.name as 国名2
+from pairings p
+left join countries c1 on p.my_country_id = c1.id
+left join countries c2 on p.enemy_country_id = c2.id
+order by kickoff
+
+--問題6：すべての選手を対象として選手ごとの得点ランキングを表示してください。（SELECT句で副問合せを使うこと）
+select p.name as 名前, p.position as ポジション, p.club as 所属クラブ, 
+    (select count(id) from goals g where g.player_id = p.id) as ゴール数
+from players p
+order by ゴール数 desc
+
+--問題7：すべての選手を対象として選手ごとの得点ランキングを表示してください。（テーブル結合を使うこと）
+select p.name as 名前,p.position as ポジション,p.club as 所属クラブ,
+count(g.id) as ゴール数
+from players p
+left join goals g on g.player_id = p.id
+group by p.id,p.name,p.position,p.club
+order by ゴール数 desc
+
+--問題8：各ポジションごとの総得点を表示してください。
+select p.position as ポジション, sum(g.id) as ゴール数
+from players p
+left join goals g on g.player_id = p.id
+group by p.position
+order by ゴール数 desc
+
+--*問題9：ワールドカップ開催当時（2014-06-13）の年齢をプレイヤー毎に表示する。
+select timestampdiff(year,birth,'2014-06-13') as age,name,position
+from players
+order by age desc
+
+--問題10：オウンゴールの回数を表示する
+select count(g.goal_time)
+from goals g
+where g.player_id is null
+
+
+
+
+
+
+
+
