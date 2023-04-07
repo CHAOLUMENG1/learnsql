@@ -1,11 +1,9 @@
 package java_education;
-
 /**
  * 配列を昇順でソートする（java.util等メソッド利⽤禁⽌）。
  * @author CHAOY
  *
  */
-
 public class Q7 {
 
 	public static void main(String[] args) {
