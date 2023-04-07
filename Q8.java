@@ -1,15 +1,19 @@
-package java_education;
+package loop;
+
 /**
- * LV10のパスカルの三⾓形を出⼒してください。
+ * 自然数（正の整数）を 10 回入力し、最大値を求めるプログラムを作成しなさい。
  * @author CHAOY
  *
  */
-
 public class Q8 {
 
 	public static void main(String[] args) {
-		// TODO 自動生成されたメソッド・スタブ
-
+		int max=0;
+		for(int i =1;i<=10;i++) {
+			
+			max=i;
+		}
+		System.out.print(max);
 	}
 
 }
