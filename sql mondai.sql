@@ -685,3 +685,83 @@ left join countries c1 on p.my_country_id=c1.id
 left join countries c2 on p.enemy_country_id=c2.id 
 order by kickoff
 
+--問題6：すべての選手を対象として選手ごとの得点ランキングを表示してください。（SELECT句で副問合せを使うこと）
+select p.name as 名前,p.position as ポジション,p.club as 所属クラブ,
+(select count(id) from goals g where g.player_id=p.id) as ゴール数
+from players p
+order by ゴール数 desc
+
+--問題7：すべての選手を対象として選手ごとの得点ランキングを表示してください。（テーブル結合を使うこと）
+select p.name as 名前,p.position as ポジション,p.club as 所属クラブ,
+count(g.id) as ゴール数
+from players p
+left join goals g on g.player_id = p.id
+group by p.id,p.name,p.position,p.club
+order by ゴール数 desc
+
+--問題8：各ポジションごとの総得点を表示してください。
+select p.position as ポジション, sum(g.id) as ゴール数
+from players p
+left join goals g on g.player_id = p.id
+group by p.position
+order by ゴール数 desc
+
+--【問題9】！：ワールドカップ開催当時（2014-06-13）の年齢をプレイヤー毎に表示する。
+select timestampdiff(year,birth,'2014-06-13') as age,name,position
+from players
+order by age desc
+
+--問題10：オウンゴールの回数を表示する
+select count(g.goal_time)
+from goals g
+where g.player_id is null
+
+--問題11：各グループごとの総得点数を表示して下さい。
+select c.group_name, count(g.id)
+from goals g
+left join pairings p on p.id = g.pairing_id
+left join countries c on p.my_country_id = c.id 
+where p.kickoff between '2014-06-13 0:00:00' and '2014-06-27 23:59:59'
+group by c.group_name
+order by count(g.id)-- desc
+
+--問題12：日本VSコロンビア戦（pairings.id = 103）でのコロンビアの得点のゴール時間を表示してください
+select goal_time
+from goals
+where pairing_id=103;
+
+--問題13：日本VSコロンビア戦の勝敗を表示して下さい。
+select c.name, count(g.goal_time)
+from goals g
+left join pairings p on p.id = g.pairing_id
+left join countries c on p.my_country_id = c.id 
+where p.id = 103 or p.id = 39
+group by c.name
+
+--問題14：グループCの各対戦毎にゴール数を表示してください。
+select p1.kickoff, c1.name as my_country, c2.name as enemy_country,
+    c1.ranking as my_ranking, c2.ranking as enemy_ranking,
+    count(g1.id) as my_goals
+from pairings p1
+left join countries c1 on c1.id = p1.my_country_id
+left join countries c2 on c2.id = p1.enemy_country_id
+left join goals g1 on p1.id = g1.pairing_id
+where c1.group_name = 'C' and c2.group_name = 'C'
+group by p1.kickoff, c1.name, c2.name, c1.ranking, c2.ranking
+order by p1.kickoff, c1.ranking
+
+--問題15：グループCの各対戦毎にゴール数を表示してください。
+select p1.kickoff, c1.name as my_country, c2.name as enemy_country,
+    c1.ranking as my_ranking, c2.ranking as enemy_ranking,
+    count(g1.id) as my_goals
+from pairings p1
+left join countries c1 on c1.id = p1.my_country_id
+left join countries c2 on c2.id = p1.enemy_country_id
+left join goals g1 on p1.id = g1.pairing_id
+where c1.group_name = 'C' and c2.group_name = 'C'
+group by p1.kickoff, c1.name, c2.name, c1.ranking, c2.ranking
+order by p1.kickoff, c1.ranking
+
+
+
+
