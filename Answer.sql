@@ -596,5 +596,203 @@ from
     left join doctors d 
         on e.doctor_id = d.doctor_id 
     left join departments de 
-        on e.department_id = de.department_id;
+        on e.department_id = de.department_id; 
+
+--34.各部門ごとに、その部門で働く医師の平均給与と、その部門で行われた検査の数を表示する。
+--※部門に医師がいない場合は、平均給与がNULL値として表示してください。また、部門に検査が行われていない場合は、検査数が0として表示してください。
+select
+    de.department_name
+    , AVG(d.salary) as avg_salary
+    , COUNT(e.examination_id) as num_exams 
+from
+    departments de 
+    left join doctors d 
+        on de.department_id = d.department_id 
+    left join examinations e 
+        on de.department_id = e.department_id 
+group by
+    de.department_id; 
+
+--35.departmentsテーブルとdoctorsテーブルをdepartment_idで結合し、各部署の平均給与を取得するSQL文を作成してください。
+select
+    departments.department_name
+    , AVG(doctors.salary) as avg_salary 
+from
+    departments 
+    left join doctors 
+        on departments.department_id = doctors.department_id 
+group by
+    departments.department_name; 
+
+--36.patientsテーブルとexaminationsテーブルをpatient_idで結合し、診察を受けた患者の総数と最新の診察日を取得するSQL文を作成してください。
+select
+    patients.patient_name
+    , COUNT(examinations.examination_id) as total_examinations
+    , MAX(examinations.examination_date) as latest_examination 
+from
+    patients 
+    left join examinations 
+        on patients.patient_id = examinations.patient_id 
+group by
+    patients.patient_name; 
+
+--37.医師の情報を、所属する部署の情報がある場合はそれも含めて表示するSQL文を作成してください。
+select
+    * 
+from
+    doctors 
+    right join departments 
+        on doctors.department_id = departments.department_id; 
+
+--38.検査の情報を、患者の情報がある場合はそれも含めて表示するSQL文を作成してください。
+select
+    * 
+from
+    examinations 
+    left join patients 
+        on examinations.patient_id = patients.patient_id; 
+
+--39.patientsテーブルとexaminationsテーブルをLEFT JOINし、各患者が最も最近行った検査の情報を取得するクエリを作成してください。
+select
+    p.patient_name
+    , e.examination_id
+    , e.examination_date
+    , e.diagnosis
+    , e.treatment 
+from
+    patients p 
+    left join ( 
+        select
+            examination_id
+            , patient_id
+            , examination_date
+            , diagnosis
+            , treatment
+            , ROW_NUMBER() over ( 
+                partition by
+                    patient_id 
+                order by
+                    examination_date desc
+            ) as rn 
+        from
+            examinations
+    ) e 
+        on p.patient_id = e.patient_id 
+        and e.rn = 1; 
+
+--40.doctorsテーブルとdepartmentsテーブルをLEFT JOINし、各科の平均給与と最低給与を取得するクエリを作成してください。
+select
+    d.department_name
+    , avg(doctor.salary) as avg_salary
+    , min(doctor.salary) as min_salary 
+from
+    departments d 
+    left join doctors doctor 
+        on d.department_id = doctor.department_id 
+group by
+    d.department_name; 
+
+--41.医者の名前、患者の名前、診断、治療内容、および診察日を含むレポートを作成してください。ただし、医者と患者がともに存在し、診断と治療内容が空でない場合にのみ、レポートに含めてください。レポートは、診察日が新しいものから古いものの順に並べ替える必要があります。
+select
+    doctors.doctor_name
+    , patients.patient_name
+    , examinations.diagnosis
+    , examinations.treatment
+    , examinations.examination_date 
+from
+    doctors 
+    inner join examinations 
+        on doctors.doctor_id = examinations.doctor_id 
+    inner join patients 
+        on examinations.patient_id = patients.patient_id 
+where
+    examinations.diagnosis <> '' 
+    and examinations.treatment <> '' 
+order by
+    examinations.examination_date desc; 
+
+--42.患者（patients）と医師（doctors）の情報を結合して、部署（departments）ごとの平均給与（salary）を表示するクエリを作成してください。
+--ただし、部署名（department_name）が '内科' の部署は除外してください。
+select
+    d.department_id
+    , d.department_name
+    , avg(salary) as avg_salary 
+from
+    departments d 
+    inner join doctors doc 
+        on doc.department_id = d.department_id 
+    inner join patients p 
+        on p.gender = doc.gender 
+where
+    d.department_name <> '内科' 
+group by
+    d.department_id
+    , d.department_name; 
+
+--43.患者（patients）と検査（examinations）の情報を結合して、患者名（patient_name）と検査日（examination_date）ごとの医師数を表示するクエリを作成してください。
+--ただし、患者名と検査日の組み合わせが存在しない場合は、0を表示してください。
+select
+    p.patient_name
+    , e.examination_date
+    , count(doc.doctor_id) as doctor_count 
+from
+    patients p 
+    left join examinations e 
+        on p.patient_id = e.patient_id 
+    left join doctors doc 
+        on doc.doctor_id = e.doctor_id 
+group by
+    p.patient_name
+    , e.examination_date; 
+
+--44.患者と医師の所属科とその科の説明の情報を結合するSQL文を作成してください。
+select
+    p.patient_name
+    , d.doctor_name
+    , de.department_name
+    , de.description 
+from
+    patients p 
+    inner join examinations e 
+        on p.patient_id = e.patient_id 
+    inner join doctors d 
+        on e.doctor_id = d.doctor_id 
+    left join departments de 
+        on d.department_id = de.department_id; 
+
+--45.患者の性別と年齢情報、医師の性別を結合するSQL文を作成してください。
+select
+    p.patient_name
+    , p.gender as patient_gender
+    , p.date_of_birth as patient_dob
+    , d.doctor_name
+    , d.gender as doctor_gender
+    , date_part( 
+        'year'
+        , age( 
+            current_date
+            , to_date(p.date_of_birth, 'YYYY-MM-DD')
+        )
+    ) as patient_age 
+from
+    patients p 
+    inner join examinations e 
+        on p.patient_id = e.patient_id 
+    inner join doctors d 
+        on e.doctor_id = d.doctor_id;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
