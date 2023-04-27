@@ -779,20 +779,240 @@ from
     inner join examinations e 
         on p.patient_id = e.patient_id 
     inner join doctors d 
-        on e.doctor_id = d.doctor_id;
+        on e.doctor_id = d.doctor_id; 
 
+--46.全患者の中で、診断された病気の数が最も多いトップ5の患者を取得するためのクエリを作成してください。
+--ただし、診断がない患者は結果に含めないでください。
+select
+    p.patient_name
+    , count(*) as num_diagnoses 
+from
+    patients p 
+    inner join examinations e 
+        on p.patient_id = e.patient_id 
+where
+    e.diagnosis is not null 
+group by
+    p.patient_name 
+order by
+    num_diagnoses desc 
+limit
+    5; 
 
+--47.医師ごとに、その医師が診察した患者の名前、性別、診察日、診断、および治療を取得するためのクエリを作成してください。
+--ただし、全ての医師の情報を取得する必要があります。
+select
+    d.doctor_name, p.patient_name
+    , p.gender
+    , e.examination_date
+    , e.diagnosis
+    , e.treatment 
+from
+    doctors d 
+    left join examinations e 
+        on d.doctor_id = e.doctor_id 
+    left join patients p 
+        on e.patient_id = p.patient_id; 
 
+--48.医師の平均給与を求める
+select
+    avg(salary) as avg_salary 
+from
+    doctors; 
 
+--49.部署ごとの医師の平均給与を求める
+select
+    departments.department_name
+    , avg(doctors.salary) as avg_salary 
+from
+    departments 
+    inner join doctors 
+        on departments.department_id = doctors.department_id 
+group by
+    departments.department_name; 
 
+--***50.全患者の平均年齢を求める
+SELECT
+    AVG( 
+        EXTRACT(YEAR FROM NOW()) - EXTRACT( 
+            YEAR 
+            FROM
+                TO_DATE(patients.date_of_birth, 'YYYY-MM-DD')
+        )
+    ) AS avg_age 
+FROM
+    patients; 
 
+--51.examinationsテーブルに登録された、各患者の診察回数を求めるSQL文を作成してください。
+select
+    patient_name
+    , count(*) as examination_count 
+from
+    patients 
+    inner join examinations 
+        on patients.patient_id = examinations.patient_id 
+group by
+    patient_name; 
 
+--52.患者の数をカウントするSQL文を作成してください。
+select
+    count(patient_id) as patient_count 
+from
+    patients; 
 
+--53.各科の医師数をカウントするSQL文を作成してください。
+select
+    departments.department_name
+    , count(doctors.doctor_id) as doctor_count 
+from
+    departments 
+    inner join doctors 
+        on departments.department_id = doctors.department_id 
+group by
+    departments.department_name; 
 
+--54.各患者の最も古い検査日を取得する。
+select
+    patients.patient_name
+    , min(examination_date) as old_examination_date 
+from
+    examinations 
+    inner join patients 
+        on examinations.patient_id = patients.patient_id 
+group by
+    patient_name; 
 
+--55.最低給料を持つ医師を見つける。
+select
+    min(salary) as min_salary 
+from
+    doctors; 
 
+--56.医師の最高給与を検索するSQL文を作成してください。
+select
+    max(salary) as max_salary 
+from
+    doctors; 
 
+--57.各診療科の医師の最高給与を検索するSQL文を作成してください。
+select
+    departments.department_name
+    , max(doctors.salary) as max_salary 
+from
+    departments 
+    inner join doctors 
+        on departments.department_id = doctors.department_id 
+group by
+    departments.department_name; 
 
+--58.各患者の最新の診断を検索するSQL文を作成してください。
+select
+    patients.patient_name
+    , examinations.diagnosis
+    , max(examinations.examination_date) as latest_diagnosis_date 
+from
+    patients 
+    inner join examinations 
+        on patients.patient_id = examinations.patient_id 
+group by
+    patients.patient_name
+    , examinations.diagnosis; 
 
+--59.各部門の医師の平均給与と総支払額を計算するSQL文を作成してください。
+select
+    departments.department_name
+    , avg(doctors.salary) as avg_salary
+    , sum(doctors.salary) as total_salary_paid 
+from
+    departments 
+    inner join doctors 
+        on departments.department_id = doctors.department_id 
+group by
+    departments.department_name; 
 
+--60.「歯科」所属する医師の給与総額を計算するSQL文を作成してください。
+select
+    departments.department_name
+    , sum(doctors.salary) as total_salary 
+from
+    departments 
+    inner join doctors 
+        on departments.department_id = doctors.department_id 
+where
+    departments.department_name = '歯科' 
+group by
+    departments.department_name; 
+
+--61.各部門の平均給与を取得するSQL文を作成してください。
+select
+    department_id
+    , avg(salary) as avg_salary 
+from
+    doctors 
+group by
+    department_id; 
+
+--62.各患者が受けた診察の数を取得するSQL文を作成してください。
+select
+    patient_id
+    , count(*) as exam_count 
+from
+    examinations 
+group by
+    patient_id; 
+
+--63.各部署の平均給与と最高給与を取得するクエリを作成してください。
+select
+    departments.department_name
+    , avg(doctors.salary) as avg_salary
+    , max(doctors.salary) as max_salary 
+from
+    doctors 
+    inner join departments 
+        on doctors.department_id = departments.department_id 
+group by
+    departments.department_name; 
+
+--64.患者ごとの最後の検査の診断を取得するSQL文を作成してください。
+select
+    p.patient_name
+    , e.diagnosis 
+from
+    patients p join examinations e 
+        on p.patient_id = e.patient_id 
+where
+    e.examination_date = ( 
+        select
+            max(examination_date) 
+        from
+            examinations 
+        where
+            patient_id = p.patient_id
+    ); 
+
+--***65.各診療科の医師の患者数と、その患者たちの平均年齢を求めよ。
+--ただし、各診療科の医師は1名以上所属しているものとする。
+--また、平均年齢は小数点以下2桁まで表示するものとする。
+SELECT
+    d.department_name
+    , COUNT(DISTINCT e.patient_id) AS patient_count
+    , ROUND( 
+        AVG( 
+            EXTRACT( 
+                YEAR 
+                FROM
+                    age(to_date(p.date_of_birth, 'YYYY-MM-DD'))
+            )
+        ) 
+        , 2
+    ) AS avg_age 
+FROM
+    departments d JOIN doctors doc 
+        ON d.department_id = doc.department_id JOIN examinations e 
+        ON doc.doctor_id = e.doctor_id JOIN patients p 
+        ON e.patient_id = p.patient_id 
+GROUP BY
+    d.department_name 
+HAVING
+    COUNT(DISTINCT e.patient_id) > 0;
 
