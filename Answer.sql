@@ -1014,5 +1014,280 @@ FROM
 GROUP BY
     d.department_name 
 HAVING
-    COUNT(DISTINCT e.patient_id) > 0;
+    COUNT(DISTINCT e.patient_id) > 0; 
+
+--66.患者ごとの最も新しい検査結果を取得するSQL文を作成してください.
+select
+    p.patient_name
+    , e.examination_date
+    , e.diagnosis
+    , e.treatment 
+from
+    patients p 
+    inner join examinations e 
+        on p.patient_id = e.patient_id 
+where
+    (e.examination_date, p.patient_id) in ( 
+        select
+            max(examination_date)
+            , patient_id 
+        from
+            examinations 
+        group by
+            patient_id
+    ) 
+order by
+    e.examination_date desc; 
+
+--67.部門ごとに最も高い給与をもつ医師の情報を取得するSQL文を作成してください.
+select
+    departments.department_name
+    , d.doctor_name
+    , d.salary 
+from
+    ( 
+        select
+            department_id
+            , max(salary) as max_salary 
+        from
+            doctors 
+        group by
+            department_id
+    ) m 
+    inner join doctors d 
+        on m.department_id = d.department_id 
+    inner join departments 
+        on departments.department_id = d.department_id 
+        and m.max_salary = d.salary; 
+
+--68.患者ごとに、診断された疾患の一覧を含む詳細な医療レポートを生成するクエリを作成してください。
+select
+    p.patient_name
+    , p.gender
+    , p.date_of_birth
+    , p.address
+    , p.phone_number
+    , e.examination_date
+    , d.department_name
+    , doc.doctor_name
+    , e.diagnosis
+    , e.treatment 
+from
+    patients p join examinations e 
+        on p.patient_id = e.patient_id join doctors doc 
+        on e.doctor_id = doc.doctor_id join departments d 
+        on e.department_id = d.department_id; 
+
+--***69.患者ごとの、最も最近の診察結果を表示するクエリ。患者がまだ診察を受けていない場合は、診察日がnullとなるように表示する。
+SELECT
+    patients.patient_id
+    , patients.patient_name
+    , MAX(examinations.examination_date) AS latest_examination_date
+    , CASE 
+        WHEN COUNT(examinations.examination_date) = 0 
+            THEN NULL 
+        ELSE MAX(examinations.diagnosis) 
+        END AS latest_diagnosis
+    , CASE 
+        WHEN COUNT(examinations.examination_date) = 0 
+            THEN NULL 
+        ELSE MAX(examinations.treatment) 
+        END AS latest_treatment 
+FROM
+    patients 
+    LEFT JOIN examinations 
+        ON patients.patient_id = examinations.patient_id 
+GROUP BY
+    patients.patient_id 
+ORDER BY
+    patients.patient_id; 
+
+--70.各部門の平均給与と、平均給与が最も高い部門の名前と平均給与を表示する。
+select
+    departments.department_name
+    , avg(doctors.salary) as avg_salary 
+from
+    doctors join departments 
+        on doctors.department_id = departments.department_id 
+group by
+    departments.department_name 
+order by
+    avg_salary desc 
+limit
+    1; 
+
+--71.患者名、性別、生年月日、診断、治療、診療日を含む、ある診療科は'内科'に所属するすべての患者の詳細を取得するSQLクエリ
+select
+    p.patient_name, p.gender
+    , p.date_of_birth
+    , e.diagnosis
+    , e.treatment
+    , e.examination_date 
+from
+    patients p 
+    inner join examinations e 
+        on p.patient_id = e.patient_id 
+    inner join doctors d 
+        on e.doctor_id = d.doctor_id 
+    inner join departments dep 
+        on d.department_id = dep.department_id 
+where
+    dep.department_name = '内科'; 
+
+--72.診断が'胃炎'を含む患者の総数を取得するSQL文を作成してください。
+select
+    count(distinct e.patient_id) as total_patients 
+from
+    examinations e 
+where
+    e.diagnosis like '%胃炎%'; 
+
+--73.各患者が最近受けた診断のリストを取得するSQL文を作成してください。
+select
+    patients.patient_name
+    , examinations.examination_date
+    , examinations.diagnosis 
+from
+    patients join examinations 
+        on patients.patient_id = examinations.patient_id 
+where
+    ( 
+        examinations.patient_id
+        , examinations.examination_date
+    ) in ( 
+        select
+            patient_id
+            , max(examination_date) 
+        from
+            examinations 
+        group by
+            patient_id
+    ) 
+order by
+    examinations.examination_date desc; 
+
+--74.各診療科の医師の平均給与と最高給与を取得するSQL文を作成してください。
+select
+    departments.department_name
+    , avg(doctors.salary) as avg_salary
+    , max(doctors.salary) as max_salary 
+from
+    departments join doctors 
+        on departments.department_id = doctors.department_id 
+group by
+    departments.department_name; 
+
+--75.患者の男女比を求めるSQL文を作成してください
+select
+    gender
+    , count(*) as 人数 
+from
+    patients 
+group by
+    gender; 
+
+--76.各診療科の医師数を求めるSQL文を作成してください
+select
+    departments.department_name
+    , count(doctors.doctor_id) as 医師数 
+from
+    departments 
+    left join doctors 
+        on departments.department_id = doctors.department_id 
+group by
+    departments.department_id; 
+
+--77.患者が受けた診察履歴の一覧を取得するSQL文を作成してください
+select
+    examinations.examination_date
+    , doctors.doctor_name
+    , departments.department_name
+    , examinations.diagnosis
+    , examinations.treatment 
+from
+    examinations join doctors 
+        on examinations.doctor_id = doctors.doctor_id join departments 
+        on examinations.department_id = departments.department_id; 
+
+--78.マンションの平均価格を求めるSQL文を書いてください。
+select
+    avg(price) as average_price 
+from
+    Property 
+where
+    property_type = 'マンション'; 
+
+--79.売却手数料が最も高い契約の物件名、売却者名、不動産会社名、手数料を求めるSQL文を書いてください。
+select
+    p.property_name
+    , sc.buyer_name
+    , rc.company_name
+    , max(c.commission_fee) as commission_fee 
+from
+    SaleContract as sc 
+    inner join Commission as c 
+        on sc.contract_id = c.contract_id 
+    inner join Property as p 
+        on sc.property_id = p.property_id 
+    inner join RealEstateCompany as rc 
+        on c.company_id = rc.company_id 
+group by
+    p.property_name
+    , sc.buyer_name
+    , rc.company_name 
+order by
+    commission_fee desc 
+limit
+    1; 
+
+--80.物件名に「パーク」が含まれる物件の情報を、物件名のアルファベット順に並べて取得するSQL文を書いてください。
+select
+    * 
+from
+    Property 
+where
+    property_name like '%パーク%' 
+order by
+    property_name asc;
+
+--81.2022年に契約された物件のうち、価格が1億円以上の取引件数と合計金額を求めるSQL文を書いてください。
+select aount(*) as total_count, sum(price) as total_price
+from SaleContract
+where price >= 100000000 and year(contract_date) = 2022;
+
+--82.東京都にある物件の一覧と、それぞれの物件についての画像ファイル名を表示する
+select Property.property_name, Property.address, PropertyImage.image_file_name
+from Property
+inner join PropertyImage on Property.property_id = PropertyImage.property_id
+where Property.address like '東京都%';
+
+--83.不動産会社Bが手数料を得た金額を、手数料の総額とともに表示する
+select RealEstateCompany.company_name, sum(Commission.commission_fee) as total_commission
+from Commission
+inner join RealEstateCompany on Commission.company_id = RealEstateCompany.company_id
+where RealEstateCompany.company_name = '不動産会社B'
+group by company_name;
+
+--84.2022年に契約された物件の一覧を、契約日順に並べて表示する
+select Property.property_name, SaleContract.buyer_name, SaleContract.contract_date
+from Property
+inner join SaleContract on Property.property_id = SaleContract.property_id
+where SaleContract.contract_date between '2022-01-01' and '2022-12-31'
+order by SaleContract.contract_date;
+
+--85.不動産会社Aが売却した物件の中で、最も高い価格の物件を検索する
+select Property.property_name, Property.price
+from Property
+inner join SaleContract on Property.property_id = SaleContract.property_id
+inner join Commission on SaleContract.contract_id = Commission.contract_id
+inner join RealEstateCompany on Commission.company_id = RealEstateCompany.company_id
+where RealEstateCompany.company_name = '不動産会社A'
+order by Property.price desc
+limit 1;
+
+
+
+
+
+
 
